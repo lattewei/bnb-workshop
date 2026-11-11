@@ -1,8 +1,9 @@
-# yieldmanager
+# yield!
+
+Built at **[BNB Builder Sessions Paris](https://luma.com/0wcr8wu7)** with [BNB Agent Studio](https://www.bnbchain.org/en/bnb-agent-studio) (`bag`).
 
 BNB Chain seller agent that produces a **risk-engine-validated yield allocation** for USDC and USDT. Buyers pay **$0.10** (ERC-8183 / X402). The model explains the report; it never signs. Deposit transactions are prepared as **unsigned calldata** for the client’s own wallet (MetaMask).
 
-Built at **BNB Builder Sessions Paris** (10 November 2026) with [BNB Agent Studio](https://www.bnbchain.org/en/bnb-agent-studio) (`bag`).
 
 ## Features
 
@@ -22,7 +23,7 @@ Client  →  Agent (Pieverse)  →  analyze_yield tool
                                       ↓
                          Report + unsigned calldata
                                       ↓
-                         Client signs in MetaMask
+                         Client signs in Wallet
 ```
 
 Signing for ERC-8183 quotes/submits lives in `app/agent/src/signing.ts` (fixed code, not a tool). Yield deposits are **never** signed by the Studio keystore when a client address is present.
@@ -33,7 +34,6 @@ Signing for ERC-8183 quotes/submits lives in `app/agent/src/signing.ts` (fixed c
 | --- | --- |
 | Agent custody | The Studio wallet is a **testnet seller**. It does not hold or spend the client’s stables. |
 | Chain split | Studio trial targets **BSC testnet**. Venus/Aave USDC–USDT markets used here are **mainnet**. Agent-wallet mint is refused (`chain_mismatch`). |
-| MetaMask | Client wallet, **BSC mainnet**, one popup per transaction. |
 | Lista / Kinza / Pancake | Included in the allocation; **no** calldata (UI links only). Venus and Aave only for MetaMask. |
 | Pieverse `auto/free` | Rate limits (HTTP 429) are common; UI falls back to the engine JSON. |
 | Yield | Spot APYs, not guaranteed. No leverage, no auto-rebalance. |
@@ -92,7 +92,7 @@ set STUDIO_BSC_TESTNET_RPC=https://bsc-testnet.bnbchain.org
 
 ## Stack
 
-`@bnbagent/studio-cli` 0.0.16 · AgentCore · A2A + X402 · TypeScript · Pieverse `auto/free` · viem
+`@bnbagent/studio-cli` 0.0.16 - AgentCore - A2A + X402 - TypeScript - Pieverse `auto/free` - viem
 
 ## Disclaimer
 

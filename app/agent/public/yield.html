@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Yield desk — yieldmanager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #12151c;
+      --vault: #1b2230;
+      --brass: #c4a574;
+      --paper: #efe8da;
+      --mute: #8b8478;
+      --usdt: #1f8a6a;
+      --usdc: #2b6cb0;
+      --aave: #b4532a;
+      --venus: #5b6b3a;
+      --lista: #3d6b8a;
+      --kinza: #6b4c9a;
+      --pancake: #b8860b;
+      --fail: #c44b3c;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: var(--ink); color: var(--paper); }
+    body {
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-size: 13px;
+      letter-spacing: 0.01em;
+    }
+    h1, h2, button, .risk label {
+      font-family: "Bricolage Grotesque", sans-serif;
+    }
+    .desk {
+      display: grid;
+      grid-template-columns: minmax(280px, 360px) 1fr;
+      min-height: 100vh;
+    }
+    .ticket {
+      background: var(--vault);
+      padding: 28px 24px;
+      border-right: 1px solid #2a3344;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+    .eyebrow {
+      color: var(--brass);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 0.95;
+      margin: 6px 0 0;
+    }
+    label { display: block; color: var(--mute); margin-bottom: 6px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; }
+    input[type="number"], input[type="text"] {
+      width: 100%;
+      background: #12151c;
+      border: 1px solid #3a4456;
+      color: var(--paper);
+      padding: 12px 12px;
+      font: inherit;
+    }
+    input[type="number"] { font-size: 18px; }
+    .speech {
+      white-space: pre-wrap;
+      line-height: 1.55;
+      margin-bottom: 22px;
+      padding: 16px 18px;
+      background: #161b26;
+      border-left: 3px solid var(--brass);
+    }
+    input[type="number"]:focus, .risk input:focus-visible + span, button:focus-visible {
+      outline: 2px solid var(--brass);
+      outline-offset: 2px;
+    }
+    .risk { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .risk label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 44px;
+      border: 1px solid #3a4456;
+      cursor: pointer;
+      color: var(--paper);
+      text-transform: none;
+      letter-spacing: 0;
+      font-size: 15px;
+      font-weight: 700;
+    }
+    .risk input { position: absolute; opacity: 0; pointer-events: none; }
+    .risk input:checked + span,
+    .risk label:has(input:checked) {
+      background: var(--brass);
+      color: var(--ink);
+      border-color: var(--brass);
+    }
+    .assets { display: flex; gap: 16px; }
+    .assets label {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      text-transform: none;
+      letter-spacing: 0;
+      color: var(--paper);
+      font-size: 14px;
+      cursor: pointer;
+    }
+    button {
+      margin-top: auto;
+      height: 52px;
+      border: 0;
+      background: var(--brass);
+      color: var(--ink);
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button:disabled { opacity: 0.55; cursor: wait; }
+    .blotter { padding: 28px 32px 48px; }
+    .status {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--mute);
+      margin-bottom: 18px;
+    }
+    .vault-bar {
+      display: flex;
+      height: 72px;
+      background: #0d1016;
+      overflow: hidden;
+      margin-bottom: 28px;
+    }
+    .vault-bar span {
+      display: flex;
+      align-items: flex-end;
+      padding: 8px 10px;
+      font-size: 11px;
+      color: #fff;
+      min-width: 0;
+    }
+    .p-venus { background: var(--venus); }
+    .p-aave { background: var(--aave); }
+    .p-lista { background: var(--lista); }
+    .p-kinza { background: var(--kinza); }
+    .p-pancake { background: var(--pancake); }
+    .p-cash { background: #3a3f4a; color: var(--paper) !important; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid #2a3344; }
+    th { color: var(--mute); font-weight: 400; font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .rej { margin-top: 28px; color: var(--mute); }
+    .rej li { margin: 6px 0; }
+    .err { color: var(--fail); }
+    code { font-size: 10px; word-break: break-all; color: var(--brass); }
+    a { color: var(--brass); }
+    #signAll {
+      margin-top: 16px;
+      height: 48px;
+      padding: 0 18px;
+      border: 0;
+      background: var(--brass);
+      color: var(--ink);
+      font-family: "Bricolage Grotesque", sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    #signAll:disabled { opacity: 0.55; cursor: wait; }
+    .empty { color: var(--mute); max-width: 36ch; line-height: 1.5; }
+    @media (max-width: 860px) {
+      .desk { grid-template-columns: 1fr; }
+      .ticket { border-right: 0; border-bottom: 1px solid #2a3344; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="desk">
+    <form class="ticket" id="form">
+      <div>
+        <div class="eyebrow">Yield desk · local</div>
+        <h1>Combien, et à quel risque.</h1>
+      </div>
+      <div>
+        <label for="wallet">Wallet BSC (0x…)</label>
+        <input id="wallet" name="walletAddress" type="text" placeholder="laisse vide = montant fictif" spellcheck="false" />
+      </div>
+      <div>
+        <label for="amount">Montant USD (si pas de wallet)</label>
+        <input id="amount" name="amountUsd" type="number" min="1" step="1" value="1000" required />
+      </div>
+      <div>
+        <label>Profil</label>
+        <div class="risk">
+          <label><input type="radio" name="riskProfile" value="low" checked /> low</label>
+          <label><input type="radio" name="riskProfile" value="moderate" /> mid</label>
+          <label><input type="radio" name="riskProfile" value="high" /> high</label>
+        </div>
+      </div>
+      <div>
+        <label>Assets</label>
+        <div class="assets">
+          <label><input type="checkbox" name="assets" value="USDC" checked /> USDC</label>
+          <label><input type="checkbox" name="assets" value="USDT" checked /> USDT</label>
+        </div>
+      </div>
+      <div>
+        <label for="minLiq">Liquidité min (USD, optionnel)</label>
+        <input id="minLiq" name="minLiquidityUsd" type="number" min="0" step="100" placeholder="auto selon profil" />
+      </div>
+      <div>
+        <label for="note">Dire à l’agent</label>
+        <input id="note" name="note" type="text" maxlength="240" placeholder="ex. je veux surtout de la liquidité" />
+      </div>
+      <button type="submit" id="go">Demander à l’agent</button>
+    </form>
+    <section class="blotter">
+      <div class="status">
+        <span id="meta">Pas encore de run.</span>
+        <span id="net"></span>
+      </div>
+      <div class="vault-bar" id="bar" hidden></div>
+      <div id="speech" class="speech" hidden></div>
+      <div id="out" class="empty">Parle à l’agent : montant + profil. Il appelle le Risk Engine, puis t’explique. Aucune transaction depuis cet écran.</div>
+    </section>
+  </div>
+  <script>
+    const form = document.getElementById("form");
+    const go = document.getElementById("go");
+    const out = document.getElementById("out");
+    const bar = document.getElementById("bar");
+    const meta = document.getElementById("meta");
+    const net = document.getElementById("net");
+    const speech = document.getElementById("speech");
+    let lastReport = null;
+
+    const fmt = (n) => Number(n).toLocaleString("fr-FR", { maximumFractionDigits: 2 });
+
+    async function mm(method, params) {
+      if (!window.ethereum) throw new Error("MetaMask introuvable.");
+      return window.ethereum.request({ method, params });
+    }
+
+    async function ensureBsc(from) {
+      const chainId = await mm("eth_chainId");
+      if (chainId === "0x38") return from;
+      try {
+        await mm("wallet_switchEthereumChain", [{ chainId: "0x38" }]);
+      } catch (e) {
+        if (e && e.code === 4902) {
+          await mm("wallet_addEthereumChain", [{
+            chainId: "0x38",
+            chainName: "BNB Smart Chain",
+            nativeCurrency: { name: "BNB", symbol: "BNB", decimals: 18 },
+            rpcUrls: ["https://bsc-dataseed.binance.org"],
+            blockExplorerUrls: ["https://bscscan.com"],
+          }]);
+        } else {
+          throw e;
+        }
+      }
+      return from;
+    }
+
+    async function signAll() {
+      const actions = (lastReport && lastReport.actions || []).filter((a) => a.to && a.data);
+      if (actions.length === 0) throw new Error("Rien à signer (Venus/Aave only).");
+      const accounts = await mm("eth_requestAccounts");
+      const from = accounts[0];
+      await ensureBsc(from);
+      const expected = lastReport.holdings && lastReport.holdings.address;
+      if (expected && from.toLowerCase() !== expected.toLowerCase()) {
+        throw new Error("MetaMask (" + from.slice(0, 6) + "…) ≠ wallet analysé. Change de compte.");
+      }
+      const btn = document.getElementById("signAll");
+      const log = document.getElementById("signLog");
+      btn.disabled = true;
+      log.textContent = "";
+      try {
+        for (let i = 0; i < actions.length; i++) {
+          const a = actions[i];
+          log.textContent = "Popup " + (i + 1) + "/" + actions.length + " · " + a.title;
+          const hash = await mm("eth_sendTransaction", [{
+            from,
+            to: a.to,
+            data: a.data,
+            value: "0x0",
+          }]);
+          log.textContent += "\n" + hash;
+        }
+        log.textContent = "Terminé. " + actions.length + " tx envoyées.";
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    out.addEventListener("click", async (e) => {
+      if (e.target && e.target.id === "signAll") {
+        try { await signAll(); }
+        catch (err) {
+          const log = document.getElementById("signLog");
+          if (log) log.textContent = err.message || String(err);
+        }
+      }
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const data = new FormData(form);
+      const assets = data.getAll("assets");
+      if (assets.length === 0) {
+        out.className = "err";
+        out.textContent = "Coche au moins USDC ou USDT.";
+        return;
+      }
+      go.disabled = true;
+      meta.textContent = "L’agent appelle analyze_yield…";
+      speech.hidden = true;
+      try {
+        const res = await fetch("/api/agent", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            amountUsd: Number(data.get("amountUsd")),
+            riskProfile: data.get("riskProfile"),
+            assets,
+            minLiquidityUsd: data.get("minLiquidityUsd"),
+            note: data.get("note"),
+            walletAddress: data.get("walletAddress"),
+          }),
+        });
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error || "échec");
+        if (body.text) {
+          speech.hidden = false;
+          speech.textContent = body.text;
+        }
+        if (body.report) render(body.report);
+        else {
+          out.className = "empty";
+          out.textContent = "L’agent n’a pas appelé analyze_yield.";
+        }
+      } catch (err) {
+        out.className = "err";
+        out.textContent = err.message || String(err);
+        bar.hidden = true;
+      } finally {
+        go.disabled = false;
+      }
+    });
+
+    function render(r) {
+      lastReport = r;
+      const cash = r.cashUsd || 0;
+      const total = (r.allocation || []).reduce((s, l) => s + l.amountUsd, 0) + cash;
+      meta.textContent = (r.user?.riskProfile || "") + " · " + (r.execution?.skippedReason || "plan only");
+      net.textContent = r.portfolioNetApyPercent != null ? "net " + fmt(r.portfolioNetApyPercent) + " %" : "";
+      bar.hidden = false;
+      bar.innerHTML = "";
+      for (const leg of r.allocation || []) {
+        const el = document.createElement("span");
+        el.className = "p-" + leg.protocol;
+        el.style.flex = String(Math.max(leg.weightPercent, 2));
+        el.textContent = leg.protocol + " " + leg.asset + " " + fmt(leg.weightPercent) + "%";
+        bar.appendChild(el);
+      }
+      if (cash > 0 && total > 0) {
+        const el = document.createElement("span");
+        el.className = "p-cash";
+        el.style.flex = String(Math.max((cash / total) * 100, 2));
+        el.textContent = "cash " + fmt(cash);
+        bar.appendChild(el);
+      }
+
+      const rows = (r.allocation || []).map((l) =>
+        "<tr><td>" + l.protocol + "</td><td>" + l.asset + "</td><td class='num'>" +
+        fmt(l.weightPercent) + "%</td><td class='num'>" + fmt(l.amountUsd) +
+        "</td><td class='num'>" + fmt(l.advertisedApyPercent) + "%</td></tr>"
+      ).join("");
+      const rej = (r.rejected || []).slice(0, 8).map((x) => {
+        const m = x.market || {};
+        return "<li>" + (m.protocol || "") + " " + (m.symbol || m.asset || "") + " — " + (x.reasons || []).join(", ") + "</li>";
+      }).join("");
+      const h = r.holdings;
+      const hold = h
+        ? "<p>Soldes " + h.address.slice(0, 6) + "…" + h.address.slice(-4) + " · USDC " + fmt(h.usdc) + " · USDT " + fmt(h.usdt) + " · total " + fmt(h.totalUsd) + "</p>"
+        : "";
+      const acts = (r.actions || []).map((a) =>
+        "<li><strong>" + a.title + "</strong> · <a href='" + a.url + "' target='_blank' rel='noreferrer'>ouvrir</a>" +
+        (a.to ? "<br><span class='mute'>to " + a.to + "</span>" : "") +
+        (a.data ? "<br><code>" + a.data.slice(0, 74) + "…</code>" : "") +
+        "</li>"
+      ).join("");
+      out.className = "";
+      out.innerHTML =
+        hold +
+        "<table><thead><tr><th>Protocole</th><th>Asset</th><th class='num'>Poids</th><th class='num'>USD</th><th class='num'>APY</th></tr></thead><tbody>" +
+        (rows || "<tr><td colspan='5'>Rien d’alloué. Le Risk Engine a tout refusé.</td></tr>") +
+        "</tbody></table>" +
+        (acts ? "<div class='rej'><div class='eyebrow'>À signer toi-même (BSC mainnet)</div><ul>" + acts + "</ul>" +
+          "<button type='button' id='signAll'>Tout signer dans MetaMask</button><pre id='signLog'></pre></div>" : "") +
+        (rej ? "<div class='rej'><div class='eyebrow'>Refusés</div><ul>" + rej + "</ul></div>" : "");
+    }
+  </script>
+</body>
+</html>
